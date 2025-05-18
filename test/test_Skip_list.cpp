@@ -12,6 +12,7 @@ protected:
     {
         delete skip_list;
     }
+    SkipList* skip_list;
 };
 
 TEST_F(SkipListTesting, SingleInsert) 
