@@ -2,9 +2,9 @@
 #include <iostream>
 #include <limits>
 #include <cstdlib>
+#include <vector>  // Добавлен заголовок для std::vector
 
 using namespace std;
-
 
 template <typename T>
 struct Node {
@@ -27,7 +27,7 @@ template <typename T>
 class SkipList {
 private:
     int maxLevel;
-    float p; 
+    float p;
     Node<T>* header;
 
     int randomLevel() {
@@ -44,19 +44,19 @@ public:
     }
 
     ~SkipList() {
-        Node<T>* current = header->forward[0]; 
+        Node<T>* current = header->forward[0];
         while (current != nullptr) {
             Node<T>* temp = current;
             current = current->forward[0];
             delete temp;
         }
-        delete header; 
+        delete header;
     }
 
-   
     void insert(const T& key) {
         Node<T>* current = header;
-        Node<T>* update[maxLevel + 1];
+        vector<Node<T>*> update(maxLevel + 1);  // Заменено на vector
+
         for (int i = maxLevel; i >= 0; i--) {
             while (current->forward[i] != nullptr && current->forward[i]->key < key) {
                 current = current->forward[i];
@@ -71,6 +71,7 @@ public:
 
         int level = randomLevel();
         if (level > maxLevel) {
+            update.resize(level + 1);  // Увеличиваем размер vector при необходимости
             for (int i = maxLevel + 1; i <= level; i++) {
                 update[i] = header;
             }
@@ -97,7 +98,7 @@ public:
 
     void erase(const T& key) {
         Node<T>* current = header;
-        Node<T>* update[maxLevel + 1];
+        vector<Node<T>*> update(maxLevel + 1);  // Заменено на vector
 
         for (int i = maxLevel; i >= 0; i--) {
             while (current->forward[i] != nullptr && current->forward[i]->key < key) {
