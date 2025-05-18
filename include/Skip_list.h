@@ -1,170 +1,149 @@
 ﻿#pragma once
 #include <iostream>
+#include <limits>
 #include <cstdlib>
-#include <stdexcept>
 
-struct XNode
-{
-    int data;
-    XNode* right;
-    XNode* bottom;
-    XNode* top;
-    XNode(int val, XNode* b = nullptr, XNode* r = nullptr, XNode* t = nullptr): data(val), bottom(b), right(r), top(t) {}
+using namespace std;
 
-    ~XNode()
-    {
-        right = nullptr;
-        bottom = nullptr;
-        top = nullptr;
+
+template <typename T>
+struct Node {
+    T key;
+    Node** forward;
+
+    Node(const T& key, int level) : key(key) {
+        forward = new Node * [level + 1];
+        for (int i = 0; i <= level; i++) {
+            forward[i] = nullptr;
+        }
+    }
+
+    ~Node() {
+        delete[] forward;
     }
 };
 
-class Skip_list
-{
+template <typename T>
+class SkipList {
 private:
-    XNode* root;
-    int height;
+    int maxLevel;
+    float p; 
+    Node<T>* header;
 
-    XNode* addElement(XNode* current, int val)
-    {
-        while (current->right && current->right->data < val)
-            current = current->right;
-
-        XNode* lowerNode = nullptr;
-        if (current->bottom)
-        {
-            lowerNode = addElement(current->bottom, val);
+    int randomLevel() {
+        int lvl = 1;
+        while (rand() % 100 < p * 100 && lvl < maxLevel) {
+            lvl++;
         }
-        if (lowerNode || !current->bottom)
-        {
-            XNode* newNode = new XNode(val, lowerNode, current->right);
-            current->right = newNode;
-            if (lowerNode)
-            {
-                lowerNode->top = newNode;
-                newNode->bottom = lowerNode;
-            }
-            return (rand() % 2 == 0) ? newNode : nullptr;
-        }
-        return nullptr;
-    }
-
-    void removeElement(XNode* current, int val)
-    {
-        if (!locate(val))
-        {
-            throw std::logic_error("Element not present");
-        }
-
-        while (current->right && current->right->data < val)
-        {
-            current = current->right;
-        }
-
-        if (current->bottom)
-        {
-            removeElement(current->bottom, val);
-        }
-
-        if (current->right && current->right->data == val)
-        {
-            XNode* temp = current->right;
-            current->right = temp->right;
-            delete temp;
-        }
+        return lvl;
     }
 
 public:
-    Skip_list() : root(nullptr), height(0) {}
-
-    explicit Skip_list(int levels) : height(levels)
-    {
-        root = new XNode(0);
-        XNode* temp = root;
-
-        for (int i = 1; i < height; ++i)
-        {
-            temp->bottom = new XNode(0);
-            temp->bottom->top = temp;
-            temp = temp->bottom;
-        }
-        temp->bottom = nullptr;
+    SkipList(int maxLevel = 16, float p = 0.5) : maxLevel(maxLevel), p(p) {
+        header = new Node<T>(numeric_limits<T>::min(), maxLevel);
     }
 
-    ~Skip_list()
-    {
-        XNode* level = root;
+    ~SkipList() {
+        Node<T>* current = header->forward[0]; 
+        while (current != nullptr) {
+            Node<T>* temp = current;
+            current = current->forward[0];
+            delete temp;
+        }
+        delete header; 
+    }
 
-        while (level)
-        {
-            XNode* curr = level;
-            level = level->bottom;
+   
+    void insert(const T& key) {
+        Node<T>* current = header;
+        Node<T>* update[maxLevel + 1];
+        for (int i = maxLevel; i >= 0; i--) {
+            while (current->forward[i] != nullptr && current->forward[i]->key < key) {
+                current = current->forward[i];
+            }
+            update[i] = current;
+        }
+        current = current->forward[0];
 
-            while (curr)
-            {
-                XNode* next = curr->right;
-                delete curr;
-                curr = next;
+        if (current != nullptr && current->key == key) {
+            return;
+        }
+
+        int level = randomLevel();
+        if (level > maxLevel) {
+            for (int i = maxLevel + 1; i <= level; i++) {
+                update[i] = header;
+            }
+            maxLevel = level;
+        }
+
+        Node<T>* newNode = new Node<T>(key, level);
+        for (int i = 0; i <= level; i++) {
+            newNode->forward[i] = update[i]->forward[i];
+            update[i]->forward[i] = newNode;
+        }
+    }
+
+    bool search(const T& key) {
+        Node<T>* current = header;
+        for (int i = maxLevel; i >= 0; i--) {
+            while (current->forward[i] != nullptr && current->forward[i]->key < key) {
+                current = current->forward[i];
             }
         }
+        current = current->forward[0];
+        return current != nullptr && current->key == key;
     }
 
-    int getHeight() const noexcept
-    {
-        return height;
-    }
+    void erase(const T& key) {
+        Node<T>* current = header;
+        Node<T>* update[maxLevel + 1];
 
-    void insert(int val)
-    {
-        addElement(root, val);
-    }
-
-    void erase(int val)
-    {
-        removeElement(root, val);
-    }
-
-    XNode* locate(int val) const
-    {
-        XNode* curr = root;
-
-        while (curr)
-        {
-            while (curr->right && curr->right->data < val)
-            {
-                curr = curr->right;
+        for (int i = maxLevel; i >= 0; i--) {
+            while (current->forward[i] != nullptr && current->forward[i]->key < key) {
+                current = current->forward[i];
             }
+            update[i] = current;
+        }
 
-            if (curr->right && curr->right->data == val)
-            {
-                XNode* found = curr->right;
-                while (found->bottom)
-                {
-                    found = found->bottom;
+        current = current->forward[0];
+        if (current != nullptr && current->key == key) {
+            for (int i = 0; i <= maxLevel; i++) {
+                if (update[i]->forward[i] != current) {
+                    break;
                 }
-                return found;
+                update[i]->forward[i] = current->forward[i];
             }
-            curr = curr->bottom;
+            delete current;
+            while (maxLevel > 0 && header->forward[maxLevel] == nullptr) {
+                maxLevel--;
+            }
         }
-        return nullptr;
     }
 
-    void display() const
-    {
-        XNode* level = root;
-        int levelCount = 0;
-        while (level)
-        {
-            std::cout << "Layer " << levelCount++ << ": ";
-            XNode* curr = level->right;
-
-            while (curr)
-            {
-                std::cout << curr->data << " ";
-                curr = curr->right;
+    void print() {
+        for (int i = maxLevel; i >= 0; i--) {
+            Node<T>* current = header->forward[i];
+            cout << "Level " << i << ": ";
+            while (current != nullptr) {
+                cout << current->key << " ";
+                current = current->forward[i];
             }
-            std::cout << std::endl;
-            level = level->bottom;
+            cout << endl;
         }
+    }
+
+    size_t size() const {
+        size_t count = 0;
+        Node<T>* current = header->forward[0];
+        while (current != nullptr) {
+            count++;
+            current = current->forward[0];
+        }
+        return count;
+    }
+
+    bool empty() const {
+        return size() == 0;
     }
 };
