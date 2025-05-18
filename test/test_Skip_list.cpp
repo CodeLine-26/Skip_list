@@ -10,8 +10,7 @@ TEST(SkipListTest, InsertTest) {
     EXPECT_TRUE(skipList.search(5));
     EXPECT_TRUE(skipList.search(10));
     EXPECT_TRUE(skipList.search(3));
-    EXPECT_FALSE(skipList.search(7)); // Этого элемента нет в списке
-}
+    EXPECT_FALSE(skipList.search(7));
 
 TEST(SkipListTest, EraseTest) {
     SkipList<int> skipList;
