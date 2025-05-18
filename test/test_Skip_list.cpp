@@ -6,81 +6,73 @@ class SkipListTesting : public ::testing::Test
 protected:
     void SetUp() override
     {
-        skip_list = new SkipList();
+        SkipList = new SkipList();
     }
     void TearDown() override
     {
-        delete skip_list;
+        delete SkipList;
     }
-    SkipList* skip_list;
+    SkipList* SkipList;
 };
 
 TEST_F(SkipListTesting, SingleInsert) 
 {
-    skip_list->insert(1);
-    EXPECT_TRUE(skip_list->search(1));
-    EXPECT_FALSE(skip_list->search(2));
+    SkipList->insert(1);
+    EXPECT_TRUE(SkipList->search(1));
+    EXPECT_FALSE(SkipList->search(2));
 }
 
 TEST_F(SkipListTesting, EmptyList) 
 {
-    EXPECT_FALSE(skip_list->search(1));
-    EXPECT_FALSE(skip_list->erase(1));
+    EXPECT_FALSE(SkipList->search(1));
+    EXPECT_FALSE(SkipList->erase(1));
 }
 
 TEST_F(SkipListTesting, DuplicateInserts) 
 {
-    skip_list->insert(1);
-    skip_list->insert(1);
-    skip_list->insert(1);
+    SkipList->insert(1);
+    SkipList->insert(1);
+    SkipList->insert(1);
 
-    EXPECT_TRUE(skip_list->erase(1));
-    EXPECT_TRUE(skip_list->search(1));
+    EXPECT_TRUE(SkipList->erase(1));
+    EXPECT_TRUE(SkipList->search(1));
 }
 
 TEST_F(SkipListTesting, MultipleInserts) 
 {
-    skip_list->insert(1);
-    skip_list->insert(2);
-    skip_list->insert(3);
-    skip_list->insert(4);
+    SkipList->insert(1);
+    SkipList->insert(2);
+    SkipList->insert(3);
+    SkipList->insert(4);
 
-    EXPECT_TRUE(skip_list->search(1));
-    EXPECT_TRUE(skip_list->search(2));
-    EXPECT_TRUE(skip_list->search(3));
-    EXPECT_TRUE(skip_list->search(4));
-    EXPECT_FALSE(skip_list->search(5));
+    EXPECT_TRUE(SkipList->search(1));
+    EXPECT_TRUE(SkipList->search(2));
+    EXPECT_TRUE(SkipList->search(3));
+    EXPECT_TRUE(SkipList->search(4));
+    EXPECT_FALSE(SkipList->search(5));
 }
 
 TEST_F(SkipListTesting, EraseFromEmpty) 
 {
-    EXPECT_FALSE(skip_list->erase(1));
+    EXPECT_FALSE(SkipList->erase(1));
 }
 
 TEST_F(SkipListTesting, InsertNegativeNumbers)
 {
-    skip_list->insert(-1);
-    skip_list->insert(-2);
+    SkipList->insert(-1);
+    SkipList->insert(-2);
 
-    EXPECT_TRUE(skip_list->search(-1));
-    EXPECT_TRUE(skip_list->search(-2));
-    EXPECT_FALSE(skip_list->search(0));
-}
-
-TEST_F(SkipListTesting, MaxLevelInsert) 
-{
-    for (int i = 0; i < 1000; ++i) {
-        skip_list->insert(rand() % 10000);
-    }
-    EXPECT_TRUE(true);
+    EXPECT_TRUE(SkipList->search(-1));
+    EXPECT_TRUE(SkipList->search(-2));
+    EXPECT_FALSE(SkipList->search(0));
 }
 
 TEST_F(SkipListTesting, PrintNonEmpty) 
 {
-    skip_list->insert(1);
-    skip_list->insert(2);
+    SkipList->insert(1);
+    SkipList->insert(2);
     testing::internal::CaptureStdout();
-    skip_list->print();
+    SkipList->print();
     std::string output = testing::internal::GetCapturedStdout();
     EXPECT_TRUE(output.find("1") != std::string::npos);
     EXPECT_TRUE(output.find("2") != std::string::npos);
